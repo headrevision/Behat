@@ -25,7 +25,8 @@
     },
     "autoload": {
         "psr-0": {
-            "Behat\\Behat": "src/"
+            "Behat\\Behat": "src/",
+            "Headrevision": "src/"
         }
     },
     "bin": ["bin/behat"]

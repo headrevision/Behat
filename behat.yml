@@ -2,6 +2,19 @@ default:
   paths:
     features:               %%BEHAT_CONFIG_PATH%%/features
     bootstrap:              %%BEHAT_CONFIG_PATH%%/features/bootstrap
+  formatter:
+    name:                    'pretty_false'
+    parameters:
+        decorated:           true
+        verbose:             false
+        time:                true
+        language:            'en'
+        output_path:         null
+        multiline_arguments: true
+    classes:
+      progress_false:      'Headrevision\ProgressWithFalseStepsFormatter',
+      pretty_false:        'Headrevision\PrettyWithFalseStepsFormatter',
+      html_false:          'Headrevision\HtmlWithFalseStepsFormatter'
 
 annotations:
   paths:
