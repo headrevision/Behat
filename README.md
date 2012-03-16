@@ -10,15 +10,21 @@ See https://github.com/Behat/Behat/issues/111
 ProgressWithFalseStepsFormatter
 -------------------------------
 
+https://github.com/headrevision/Behat/blob/falsesteps/src/Behat/CommonFormatters/ProgressWithFalseStepsFormatter.php
+
 ![ProgressWithFalseStepsFormatter](https://raw.github.com/headrevision/Behat/falsesteps/progress_with_false_steps_formatter.png "ProgressWithFalseStepsFormatter")
 
 PrettyWithFalseStepsFormatter
 -----------------------------
 
+https://github.com/headrevision/Behat/blob/falsesteps/src/Behat/CommonFormatters/PrettyWithFalseStepsFormatter.php
+
 ![PrettyWithFalseStepsFormatter](https://raw.github.com/headrevision/Behat/falsesteps/pretty_with_false_steps_formatter.png "PrettyWithFalseStepsFormatter")
 
 HtmlWithFalseStepsFormatter
 ---------------------------
+
+https://github.com/headrevision/Behat/blob/falsesteps/src/Behat/CommonFormatters/HtmlWithFalseStepsFormatter.php
 
 ![HtmlWithFalseStepsFormatter](https://raw.github.com/headrevision/Behat/falsesteps/html_with_false_steps_formatter.png "HtmlWithFalseStepsFormatter")
 
