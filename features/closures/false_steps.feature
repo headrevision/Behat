@@ -20,9 +20,9 @@ Feature: Formatters with failed steps
             output_path:         null
             multiline_arguments: true
           classes:
-            progress_false:      'Headrevision\ProgressWithFalseStepsFormatter',
-            pretty_false:        'Headrevision\PrettyWithFalseStepsFormatter',
-            html_false:          'Headrevision\HtmlWithFalseStepsFormatter'
+            progress_false:      'Behat\CommonFormatters\ProgressWithFalseStepsFormatter',
+            pretty_false:        'Behat\CommonFormatters\PrettyWithFalseStepsFormatter',
+            html_false:          'Behat\CommonFormatters\HtmlWithFalseStepsFormatter'
 
       annotations:
         paths:

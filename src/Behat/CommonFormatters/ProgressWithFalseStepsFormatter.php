@@ -1,6 +1,6 @@
 <?php
 
-namespace Headrevision;
+namespace Behat\CommonFormatters;
 
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 
@@ -13,6 +13,8 @@ use Behat\Behat\Formatter\ProgressFormatter,
 
 use Behat\Gherkin\Node\BackgroundNode,
     Behat\Gherkin\Node\StepNode;
+
+use Behat\CommonFormatters\Util\FalseStepRecognizer;
 
 /**
  * Progress formatter with false steps.

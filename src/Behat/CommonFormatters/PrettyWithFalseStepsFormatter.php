@@ -1,6 +1,6 @@
 <?php
 
-namespace Headrevision;
+namespace Behat\CommonFormatters;
 
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 
@@ -15,6 +15,8 @@ use Behat\Behat\Formatter\PrettyFormatter,
 use Behat\Gherkin\Node\OutlineNode,
     Behat\Gherkin\Node\StepNode,
     Behat\Gherkin\Node\TableNode;
+
+use Behat\CommonFormatters\Util\FalseStepRecognizer;
 
 /**
  * Pretty formatter with false steps.

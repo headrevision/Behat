@@ -12,6 +12,13 @@
             "homepage":  "http://everzet.com"
         }
     ],
+    "authors":      [
+        {
+            "name":      "Fabian Kiss",
+            "email":     "headrevision@gmail.com",
+            "homepage":  "https://github.com/headrevision"
+        }
+    ],
     "require": {
         "php":                           ">=5.3.1",
         "behat/gherkin":                 ">=2.0.1,<2.1.0-dev",
@@ -26,7 +33,7 @@
     "autoload": {
         "psr-0": {
             "Behat\\Behat": "src/",
-            "Headrevision": "src/"
+            "Behat\\CommonFormatters": "src/"
         }
     },
     "bin": ["bin/behat"]

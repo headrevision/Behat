@@ -1,6 +1,6 @@
 <?php
 
-namespace Headrevision;
+namespace Behat\CommonFormatters\Util;
 
 use Behat\Behat\DataCollector\LoggerDataCollector;
 
