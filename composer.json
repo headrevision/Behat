@@ -10,9 +10,7 @@
             "name":      "Konstantin Kudryashov",
             "email":     "ever.zet@gmail.com",
             "homepage":  "http://everzet.com"
-        }
-    ],
-    "authors":      [
+        },
         {
             "name":      "Fabian Kiss",
             "email":     "headrevision@gmail.com",
