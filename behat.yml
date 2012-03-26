@@ -2,6 +2,12 @@ default:
   paths:
     features:               %%BEHAT_CONFIG_PATH%%/features
     bootstrap:              %%BEHAT_CONFIG_PATH%%/features/bootstrap
+  formatter:
+    name:                   'html_linked'
+    parameters:
+      remote_base_url:      'https://github.com/headrevision/Behat/tree/stepdeflinks/'
+    classes:
+      html_linked:          'Behat\CommonFormatters\HtmlLinkedFormatter'
 
 annotations:
   paths:
