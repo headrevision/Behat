@@ -10,6 +10,11 @@
             "name":      "Konstantin Kudryashov",
             "email":     "ever.zet@gmail.com",
             "homepage":  "http://everzet.com"
+        },
+        {
+            "name":      "Fabian Kiss",
+            "email":     "headrevision@gmail.com",
+            "homepage":  "https://github.com/headrevision"
         }
     ],
     "require": {
@@ -25,7 +30,8 @@
     },
     "autoload": {
         "psr-0": {
-            "Behat\\Behat": "src/"
+            "Behat\\Behat": "src/",
+            "Behat\\CommonFormatters": "src/"
         }
     },
     "bin": ["bin/behat"]

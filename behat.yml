@@ -2,6 +2,10 @@ default:
   paths:
     features:               %%BEHAT_CONFIG_PATH%%/features
     bootstrap:              %%BEHAT_CONFIG_PATH%%/features/bootstrap
+  formatter:
+    name:                   'csv'
+    classes:
+      csv:                  'Behat\CommonFormatters\CsvStatisticsFormatter'
 
 annotations:
   paths:
