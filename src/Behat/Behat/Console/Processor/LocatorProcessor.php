@@ -3,7 +3,9 @@
 namespace Behat\Behat\Console\Processor;
 
 use Symfony\Component\DependencyInjection\ContainerInterface,
+    Symfony\Component\Finder\Finder,
     Symfony\Component\Console\Command\Command,
+    Symfony\Component\Console\Input\InputArgument,
     Symfony\Component\Console\Input\InputInterface,
     Symfony\Component\Console\Output\OutputInterface;
 
@@ -18,32 +20,74 @@ use Symfony\Component\DependencyInjection\ContainerInterface,
 /**
  * Path locator processor.
  *
- * @author      Konstantin Kudryashov <ever.zet@gmail.com>
+ * @author Konstantin Kudryashov <ever.zet@gmail.com>
  */
-class LocatorProcessor implements ProcessorInterface
+class LocatorProcessor extends Processor
 {
+    private $container;
+
     /**
-     * @see     Behat\Behat\Console\Configuration\ProcessorInterface::command()
+     * Constructs processor.
+     *
+     * @param ContainerInterface $container Container instance
      */
-    public function configure(Command $command)
+    public function __construct(ContainerInterface $container)
     {
+        $this->container = $container;
     }
 
     /**
-     * @see     Behat\Behat\Console\Configuration\ProcessorInterface::process()
+     * Configures command to be able to process it later.
+     *
+     * @param Command $command
      */
-    public function process(ContainerInterface $container, InputInterface $input, OutputInterface $output)
+    public function configure(Command $command)
     {
-        $container->get('behat.runner')->setLocatorBasePath($input->getArgument('features'));
-        $locator = $container->get('behat.path_locator');
+        $command->addArgument('features', InputArgument::OPTIONAL,
+            "Feature(s) to run. Could be:\n" .
+            "- a dir <comment>(features/)</comment>\n" .
+            "- a feature <comment>(*.feature)</comment>\n" .
+            "- a scenario at specific line <comment>(*.feature:10)</comment>.\n" .
+            "- all scenarios at or after a specific line <comment>(*.feature:10-*)</comment>.\n" .
+            "- all scenarios at a line within a specific range <comment>(*.feature:10-20)</comment>."
+        );
+    }
 
-        foreach ($locator->locateBootstrapFilesPaths() as $path) {
-            require_once($path);
+    /**
+     * Processes data from container and console input.
+     *
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     *
+     * @throws \InvalidArgumentException
+     */
+    public function process(InputInterface $input, OutputInterface $output)
+    {
+        $this->container->get('behat.console.command')->setFeaturesPaths(
+            array($input->getArgument('features'))
+        );
+
+        if (is_dir($bootstrapPath = $this->container->getParameter('behat.paths.bootstrap'))) {
+            $this->loadBootstrapScripts($bootstrapPath);
         }
+    }
 
-        if (!($input->hasOption('init') && $input->getOption('init'))
-         && !is_dir($featuresPath = $locator->getFeaturesPath())) {
-            throw new \InvalidArgumentException("Features path \"$featuresPath\" does not exist");
+    /**
+     * Requires *.php scripts from bootstrap/ folder.
+     *
+     * @param string $path
+     */
+    protected function loadBootstrapScripts($path)
+    {
+        $iterator = Finder::create()
+            ->files()
+            ->name('*.php')
+            ->sortByName()
+            ->in($path)
+        ;
+
+        foreach ($iterator as $file) {
+            require_once((string) $file);
         }
     }
 }

@@ -4,15 +4,12 @@ namespace Behat\Behat\DependencyInjection;
 
 use Symfony\Component\DependencyInjection\Extension\ExtensionInterface,
     Symfony\Component\DependencyInjection\Loader\XmlFileLoader,
-    Symfony\Component\DependencyInjection\DefinitionDecorator,
-    Symfony\Component\DependencyInjection\Definition,
-    Symfony\Component\DependencyInjection\Reference,
-    Symfony\Component\DependencyInjection\Alias,
-    Symfony\Component\DependencyInjection\ContainerInterface,
     Symfony\Component\DependencyInjection\ContainerBuilder,
-    Symfony\Component\Yaml\Yaml,
+    Symfony\Component\DependencyInjection\ParameterBag\ParameterBag,
     Symfony\Component\Config\Definition\Processor,
     Symfony\Component\Config\FileLocator;
+
+use Behat\Behat\Extension\ExtensionManager;
 
 /*
  * This file is part of the Behat.
@@ -25,30 +22,24 @@ use Symfony\Component\DependencyInjection\Extension\ExtensionInterface,
 /**
  * Behat service container extension.
  *
- * @author      Konstantin Kudryashov <ever.zet@gmail.com>
+ * @author Konstantin Kudryashov <ever.zet@gmail.com>
  */
 class BehatExtension implements ExtensionInterface
 {
-    /**
-     * Configuration processor.
-     *
-     * @var     Symfony\Component\Config\Definition\Processor
-     */
+    protected $basePath;
     protected $processor;
-    /**
-     * Configuration holder.
-     *
-     * @var     Behat\Behat\DependencyInjection\Configuration
-     */
     protected $configuration;
+    protected $extensionManager;
 
     /**
      * Initializes configuration.
      */
-    public function __construct()
+    public function __construct($basePath)
     {
+        $this->basePath         = $basePath;
         $this->processor        = new Processor();
-        $this->configuration    = new Configuration();
+        $this->configuration    = new Configuration\Configuration();
+        $this->extensionManager = new ExtensionManager($basePath);
     }
 
     /**
@@ -57,61 +48,194 @@ class BehatExtension implements ExtensionInterface
     public function load(array $configs, ContainerBuilder $container)
     {
         $this->loadDefaults($container);
+        $container->setParameter('behat.paths.base', $this->basePath);
 
         // set internal encoding to UTF-8
         if ('UTF-8' !== mb_internal_encoding()) {
             mb_internal_encoding('UTF-8');
         }
 
+        // activate and normalize specified by user extensions
+        foreach ($configs as $i => $config) {
+            if (isset($config['extensions'])) {
+                $extensions = array();
+                foreach ($config['extensions'] as $id => $extensionConfig) {
+                    $activationId = $this->extensionManager->activateExtension($id);
+                    $extensions[$activationId] = $extensionConfig;
+                }
+                $configs[$i]['extensions'] = $extensions;
+            }
+        }
+
+        // set list of extensions to container
+        $container->setParameter('behat.extension.classes',
+            $this->extensionManager->getExtensionClasses()
+        );
+
         // normalize and merge the actual configuration
-        $tree   = $this->configuration->getConfigTree();
+        $tree   = $this->configuration->getConfigTree($this->extensionManager);
         $config = $this->processor->process($tree, $configs);
 
-        // load configs DIC
-        foreach ($config as $ns => $subconfig) {
-            foreach ($subconfig as $key => $value) {
-                if (is_integer($key)) {
-                    $parameterName = "behat.$ns";
-                } elseif ('filters' === $ns) {
-                    $parameterName = "gherkin.$ns.$key";
-                } else {
-                    $parameterName = "behat.$ns.$key";
-                }
-                $container->setParameter($parameterName, $value);
-            }
+        if (isset($config['paths'])) {
+            $this->loadPathsConfiguration($config['paths'], $container);
+        }
+        if (isset($config['context'])) {
+            $this->loadContextConfiguration($config['context'], $container);
+        }
+        if (isset($config['formatter'])) {
+            $this->loadFormatterConfiguration($config['formatter'], $container);
+        }
+        if (isset($config['options'])) {
+            $this->loadOptionsConfiguration($config['options'], $container);
+        }
+        if (isset($config['filters'])) {
+            $this->loadFiltersConfiguration($config['filters'], $container);
+        }
+        if (isset($config['extensions'])) {
+            $this->loadExtensionsConfiguration($config['extensions'], $container);
+        }
+
+        $this->resolveRelativePaths($container);
+        $this->addCompilerPasses($container);
+    }
+
+    /**
+     * Loads paths configuration.
+     *
+     * @param array            $config
+     * @param ContainerBuilder $container
+     */
+    protected function loadPathsConfiguration(array $config, ContainerBuilder $container)
+    {
+        foreach ($config as $key => $path) {
+            $container->setParameter('behat.paths.'.$key, $path);
         }
     }
 
     /**
-     * Loads configuration from specified config file.
+     * Loads context configuration.
      *
-     * @param   string                                                      $configFile config file path
-     * @param   string                                                      $profile    profile name
-     * @param   Symfony\Component\DependencyInjection\ContainerBuilder      $container  service container
+     * @param array            $config
+     * @param ContainerBuilder $container
      */
-    public function readConfigurationFile($configFile, $profile = 'default', ContainerBuilder $container)
+    protected function loadContextConfiguration(array $config, ContainerBuilder $container)
     {
-        $config = $this->loadConfigurationFile($configFile, $profile, $container);
-
-        // find path identifiers, started with "!" and remove all related to them paths from config
-        if (isset($config['paths'])) {
-            foreach ($config['paths'] as $ns => $paths) {
-                $pathsToRemove = array();
-                foreach ((array) $paths as $num => $path) {
-                    if ('!' === $path[0]) {
-                        $pathsToRemove[] = ltrim($path, '!');
-                        unset($config['paths'][$ns][$num]);
-                    }
-                }
-                foreach ($pathsToRemove as $pathToRemove) {
-                    if (false !== $pos = array_search($pathToRemove, $config['paths'][$ns])) {
-                        unset($config['paths'][$ns][$pos]);
-                    }
-                }
-            }
+        if ('FeatureContext' !== $config['class']) {
+            $container->setParameter('behat.context.class.force', true);
         }
 
-        return $config;
+        foreach ($config as $key => $value) {
+            $container->setParameter('behat.context.'.$key, $value);
+        }
+    }
+
+    /**
+     * Loads formatter(s) configuration.
+     *
+     * @param array            $config
+     * @param ContainerBuilder $container
+     */
+    protected function loadFormatterConfiguration(array $config, ContainerBuilder $container)
+    {
+        foreach ($config as $key => $value) {
+            $container->setParameter('behat.formatter.'.$key, $value);
+        }
+    }
+
+    /**
+     * Loads behat options configuration.
+     *
+     * @param array            $config
+     * @param ContainerBuilder $container
+     */
+    protected function loadOptionsConfiguration(array $config, ContainerBuilder $container)
+    {
+        foreach ($config as $key => $value) {
+            $container->setParameter('behat.options.'.$key, $value);
+        }
+    }
+
+    /**
+     * Loads gherkin filters configuration.
+     *
+     * @param array            $config
+     * @param ContainerBuilder $container
+     */
+    protected function loadFiltersConfiguration(array $config, ContainerBuilder $container)
+    {
+        foreach ($config as $key => $filter) {
+            $container->setParameter('gherkin.filters.'.$key, $filter);
+        }
+    }
+
+    /**
+     * Loads extensions configuration.
+     *
+     * @param array            $config
+     * @param ContainerBuilder $container
+     */
+    protected function loadExtensionsConfiguration(array $config, ContainerBuilder $container)
+    {
+        foreach ($config as $id => $extensionConfig) {
+            // load extension from manager
+            $extension = $this->extensionManager->getExtension($id);
+
+            // create temporary container
+            $tempContainer = new ContainerBuilder(new ParameterBag(array(
+                'behat.paths.base'        => $container->getParameter('behat.paths.base'),
+                'behat.extension.classes' => $container->getParameter('behat.extension.classes'),
+            )));
+            $tempContainer->addObjectResource($extension);
+
+            // load extension into temporary container
+            $extension->load($extensionConfig, $tempContainer);
+
+            // merge temporary container into normal one
+            $container->merge($tempContainer);
+
+            // add extension compiler passes
+            array_map(array($container, 'addCompilerPass'), $extension->getCompilerPasses());
+        }
+    }
+
+    /**
+     * Resolves relative behat.paths.* parameters in container.
+     *
+     * @param ContainerBuilder $container
+     */
+    protected function resolveRelativePaths(ContainerBuilder $container)
+    {
+        $featuresPath  = $container->getParameter('behat.paths.features');
+        $bootstrapPath = $container->getParameter('behat.paths.bootstrap');
+        $parameterBag  = $container->getParameterBag();
+        $featuresPath  = $parameterBag->resolveValue($featuresPath);
+        $bootstrapPath = $parameterBag->resolveValue($bootstrapPath);
+
+        if (!$this->isAbsolutePath($featuresPath)) {
+            $featuresPath = $this->basePath.DIRECTORY_SEPARATOR.$featuresPath;
+            $container->setParameter('behat.paths.features', $featuresPath);
+        }
+        if (!$this->isAbsolutePath($bootstrapPath)) {
+            $bootstrapPath = $this->basePath.DIRECTORY_SEPARATOR.$bootstrapPath;
+            $container->setParameter('behat.paths.bootstrap', $bootstrapPath);
+        }
+    }
+
+    /**
+     * Adds core compiler passes to container.
+     *
+     * @param ContainerBuilder $container
+     */
+    protected function addCompilerPasses(ContainerBuilder $container)
+    {
+        $container->addCompilerPass(new Compiler\ConsoleProcessorsPass());
+        $container->addCompilerPass(new Compiler\GherkinLoadersPass());
+        $container->addCompilerPass(new Compiler\ContextLoadersPass());
+        $container->addCompilerPass(new Compiler\ContextClassGuessersPass());
+        $container->addCompilerPass(new Compiler\ContextInitializersPass());
+        $container->addCompilerPass(new Compiler\DefinitionProposalsPass());
+        $container->addCompilerPass(new Compiler\FormattersPass());
+        $container->addCompilerPass(new Compiler\EventSubscribersPass());
     }
 
     /**
@@ -139,45 +263,6 @@ class BehatExtension implements ExtensionInterface
     }
 
     /**
-     * Loads information from YAML configuration file.
-     *
-     * @param   string                                                  $configFile
-     * @param   string                                                  $profile
-     * @param   Symfony\Component\DependencyInjection\ContainerBuilder  $container
-     *
-     * @return  array
-     */
-    protected function loadConfigurationFile($configFile, $profile, ContainerBuilder $container)
-    {
-        if (!is_file($configFile) || !is_readable($configFile)) {
-            throw new \InvalidArgumentException("Config file \"$configFile\" not found");
-        }
-
-        $config = Yaml::parse($configFile);
-
-        $resultConfig = isset($config['default']) ? $config['default'] : array();
-        if ('default' !== $profile && isset($config[$profile])) {
-            $resultConfig = $this->configMergeRecursiveWithOverwrites($resultConfig, $config[$profile]);
-        }
-
-        if (isset($config['services']) && is_array($config['services'])) {
-            foreach ($config['services'] as $id => $service) {
-                $this->parseDefinition($id, $service, $configFile, $container);
-            }
-        }
-
-        if (isset($config['imports']) && is_array($config['imports'])) {
-            foreach ($config['imports'] as $path) {
-                $resultConfig = $this->configMergeRecursiveWithOverwrites(
-                    $resultConfig, $this->parseImport($path, $profile, $container)
-                );
-            }
-        }
-
-        return $resultConfig;
-    }
-
-    /**
      * {@inheritdoc}
      */
     protected function loadDefaults($container)
@@ -196,190 +281,24 @@ class BehatExtension implements ExtensionInterface
     }
 
     /**
-     * Parses a definition.
+     * Returns whether the file path is an absolute path.
      *
-     * @param   string  $id
-     * @param   array   $service
-     * @param   string  $file
+     * @param string $file A file path
+     *
+     * @return Boolean
      */
-    private function parseDefinition($id, $service, $file, ContainerBuilder $container)
+    private function isAbsolutePath($file)
     {
-        if (is_string($service) && 0 === strpos($service, '@')) {
-            $container->setAlias($id, substr($service, 1));
-
-            return;
-        } else if (isset($service['alias'])) {
-            $public = !array_key_exists('public', $service) || (Boolean) $service['public'];
-            $container->setAlias($id, new Alias($service['alias'], $public));
-
-            return;
+        if ($file[0] == '/' || $file[0] == '\\'
+            || (strlen($file) > 3 && ctype_alpha($file[0])
+                && $file[1] == ':'
+                && ($file[2] == '\\' || $file[2] == '/')
+            )
+            || null !== parse_url($file, PHP_URL_SCHEME)
+        ) {
+            return true;
         }
 
-        if (isset($service['parent'])) {
-            $definition = new DefinitionDecorator($service['parent']);
-        } else {
-            $definition = new Definition();
-        }
-
-        if (isset($service['class'])) {
-            $definition->setClass($service['class']);
-        }
-
-        if (isset($service['scope'])) {
-            $definition->setScope($service['scope']);
-        }
-
-        if (isset($service['synthetic'])) {
-            $definition->setSynthetic($service['synthetic']);
-        }
-
-        if (isset($service['public'])) {
-            $definition->setPublic($service['public']);
-        }
-
-        if (isset($service['abstract'])) {
-            $definition->setAbstract($service['abstract']);
-        }
-
-        if (isset($service['factory_class'])) {
-            $definition->setFactoryClass($service['factory_class']);
-        }
-
-        if (isset($service['factory_method'])) {
-            $definition->setFactoryMethod($service['factory_method']);
-        }
-
-        if (isset($service['factory_service'])) {
-            $definition->setFactoryService($service['factory_service']);
-        }
-
-        if (isset($service['file'])) {
-            $definition->setFile($service['file']);
-        }
-
-        if (isset($service['arguments'])) {
-            $definition->setArguments($this->resolveServices($service['arguments']));
-        }
-
-        if (isset($service['properties'])) {
-            $definition->setProperties($this->resolveServices($service['properties']));
-        }
-
-        if (isset($service['configurator'])) {
-            if (is_string($service['configurator'])) {
-                $definition->setConfigurator($service['configurator']);
-            } else {
-                $definition->setConfigurator(array($this->resolveServices($service['configurator'][0]), $service['configurator'][1]));
-            }
-        }
-
-        if (isset($service['calls'])) {
-            foreach ($service['calls'] as $call) {
-                $definition->addMethodCall($call[0], $this->resolveServices($call[1]));
-            }
-        }
-
-        if (isset($service['tags'])) {
-            if (!is_array($service['tags'])) {
-                throw new InvalidArgumentException(sprintf('Parameter "tags" must be an array for service "%s" in %s.', $id, $file));
-            }
-
-            foreach ($service['tags'] as $tag) {
-                if (!isset($tag['name'])) {
-                    throw new InvalidArgumentException(sprintf('A "tags" entry is missing a "name" key for service "%s" in %s.', $id, $file));
-                }
-
-                $name = $tag['name'];
-                unset($tag['name']);
-
-                $definition->addTag($name, $tag);
-            }
-        }
-
-        $container->setDefinition($id, $definition);
-    }
-
-    /**
-     * Parses imports section.
-     *
-     * @param   string  $path
-     * @param   string  $profile
-     * @param   Symfony\Component\DependencyInjection\ContainerBuilder  $container
-     *
-     * @return  array
-     */
-    private function parseImport($path, $profile, ContainerBuilder $container)
-    {
-        if (!file_exists($path) && file_exists(getcwd().DIRECTORY_SEPARATOR.$path)) {
-            $path = getcwd().DIRECTORY_SEPARATOR.$path;
-        }
-
-        if (!file_exists($path)) {
-            foreach (explode(PATH_SEPARATOR, get_include_path()) as $libPath) {
-                if (file_exists($libPath.DIRECTORY_SEPARATOR.$path)) {
-                    $path = $libPath.DIRECTORY_SEPARATOR.$path;
-                    break;
-                }
-            }
-        }
-
-        return $this->loadConfigurationFile($path, $profile, $container);
-    }
-
-    /**
-     * Resolves services.
-     *
-     * @param string $value
-     *
-     * @return Reference
-     */
-    private function resolveServices($value)
-    {
-        if (is_array($value)) {
-            $value = array_map(array($this, 'resolveServices'), $value);
-        } else if (is_string($value) &&  0 === strpos($value, '@')) {
-            if (0 === strpos($value, '@?')) {
-                $value = substr($value, 2);
-                $invalidBehavior = ContainerInterface::IGNORE_ON_INVALID_REFERENCE;
-            } else {
-                $value = substr($value, 1);
-                $invalidBehavior = ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE;
-            }
-
-            if ('=' === substr($value, -1)) {
-                $value = substr($value, 0, -1);
-                $strict = false;
-            } else {
-                $strict = true;
-            }
-
-            $value = new Reference($value, $invalidBehavior, $strict);
-        }
-
-        return $value;
-    }
-
-    /**
-     * Merges two arrays into one with overwrite. It works the same as array_merge_recursive, but
-     * overwrites non-array values instead of turning them into arrays.
-     *
-     * @param   array  $array1  to
-     * @param   array  $array2  from
-     *
-     * @return  array
-     */
-    private function configMergeRecursiveWithOverwrites($array1, $array2)
-    {
-        foreach($array2 as $key => $val) {
-            if (array_key_exists($key, $array1) && is_array($val)) {
-                $array1[$key] = $this->configMergeRecursiveWithOverwrites($array1[$key], $val);
-            } elseif (is_numeric($key)) {
-                $array1[] = $val;
-            } else {
-                $array1[$key] = $val;
-            }
-        }
-
-        return $array1;
+        return false;
     }
 }

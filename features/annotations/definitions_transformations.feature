@@ -42,17 +42,22 @@ Feature: Step Arguments Transformations
           private $user;
 
           /** @Transform /"([^\ "]+)(?: - (\d+))?" user/ */
-          public static function createUserFromUsername($username, $age = 20) {
+          public function createUserFromUsername($username, $age = 20) {
               return new User($username, $age);
           }
 
           /** @Transform /^table:username,age$/ */
-          public static function createUserFromTable(TableNode $table) {
+          public function createUserFromTable(TableNode $table) {
               $hash     = $table->getHash();
               $username = $hash[0]['username'];
               $age      = $hash[0]['age'];
 
               return new User($username, $age);
+          }
+
+          /** @Transform /^(\d+)$/ */
+          public function castToNumber($number) {
+              return intval($number);
           }
 
           /**
@@ -75,6 +80,7 @@ Feature: Step Arguments Transformations
            */
           public function ageMustBe($age) {
               assertEquals($age, $this->user->getAge());
+              assertInternalType('int', $age);
           }
       }
     """
@@ -93,7 +99,7 @@ Feature: Step Arguments Transformations
           Then Username must be "antono"
           And Age must be 29
       """
-    When I run "behat -f progress"
+    When I run "behat -f progress --no-ansi"
     Then it should pass with:
       """
       ......
@@ -120,7 +126,7 @@ Feature: Step Arguments Transformations
           Then Username must be "vasiljev"
           And Age must be 30
       """
-    When I run "behat -f progress"
+    When I run "behat -f progress --no-ansi"
     Then it should pass with:
       """
       ......

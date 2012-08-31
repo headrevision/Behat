@@ -15,7 +15,7 @@ use Symfony\Component\Finder\Finder;
 /**
  * behat.phar package compiler.
  *
- * @author      Konstantin Kudryashov <ever.zet@gmail.com>
+ * @author Konstantin Kudryashov <ever.zet@gmail.com>
  */
 class PharCompiler
 {
@@ -37,7 +37,7 @@ class PharCompiler
     /**
      * Compiles phar archive.
      *
-     * @param   string  $version
+     * @param string $version
      */
     public function compile($version)
     {
@@ -64,19 +64,13 @@ class PharCompiler
 
         foreach ($finder as $file) {
             // don't compile test suites
-            if (!preg_match('/\/tests\/|\/test\//', $file->getRealPath())) {
+            if (!preg_match('/\/tests\/|\/test\//i', $file->getRealPath())) {
                 $this->addFileToPhar($file, $phar);
             }
         }
 
-        $this->replaceTokens('vendor/.composer/autoload.php', '', '', array(
-            'Composer\\Autoload' => 'Behat\\Autoload'
-        ));
-
         // license and autoloading
         $this->addFileToPhar(new \SplFileInfo($this->libPath . '/LICENSE'), $phar);
-        $this->addFileToPhar(new \SplFileInfo($this->libPath . '/vendor/.composer/autoload.php'), $phar);
-        $this->addFileToPhar(new \SplFileInfo($this->libPath . '/vendor/.composer/autoload_namespaces.php'), $phar);
         $this->addFileToPhar(new \SplFileInfo($this->libPath . '/i18n.php'), $phar);
 
         // stub
@@ -84,17 +78,13 @@ class PharCompiler
         $phar->stopBuffering();
 
         unset($phar);
-
-        $this->replaceTokens('vendor/.composer/autoload.php', '', '', array(
-            'Behat\\Autoload' => 'Composer\\Autoload'
-        ));
     }
 
     /**
      * Adds a file to phar archive.
      *
-     * @param   SplFileInfo $file   file info
-     * @param   Phar        $phar   phar packager
+     * @param SplFileInfo $file file info
+     * @param Phar        $phar phar packager
      */
     protected function addFileToPhar(\SplFileInfo $file, \Phar $phar)
     {
@@ -105,10 +95,10 @@ class PharCompiler
     /**
      * Replaces tokens in specified path.
      *
-     * @param   string|array    $files          files array or single file
-     * @param   string          $tokenStart     token start symbol
-     * @param   string          $tokenFinish    token finish symbol
-     * @param   array           $tokens         replace tokens array
+     * @param string|array $files       files array or single file
+     * @param string       $tokenStart  token start symbol
+     * @param string       $tokenFinish token finish symbol
+     * @param array        $tokens      replace tokens array
      */
     protected function replaceTokens($files, $tokenStart, $tokenFinish, array $tokens)
     {
@@ -128,13 +118,14 @@ class PharCompiler
     /**
      * Returns cli stub.
      *
-     * @param   string  $version
+     * @param string $version
      *
-     * @return  string
+     * @return string
      */
     protected function getStub($version)
     {
         return sprintf(<<<'EOF'
+#!/usr/bin/env php
 <?php
 
 /*
@@ -150,7 +141,7 @@ define('BEHAT_BIN_PATH',     __FILE__);
 define('BEHAT_VERSION',      '%s');
 
 Phar::mapPhar('behat.phar');
-require_once 'phar://behat.phar/vendor/.composer/autoload.php';
+require_once 'phar://behat.phar/vendor/autoload.php';
 
 // internal encoding to utf8
 mb_internal_encoding('utf8');

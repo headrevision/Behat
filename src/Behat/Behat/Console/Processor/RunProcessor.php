@@ -17,14 +17,28 @@ use Symfony\Component\DependencyInjection\ContainerInterface,
  */
 
 /**
- * Runner configuration processor.
+ * command configuration processor.
  *
- * @author      Konstantin Kudryashov <ever.zet@gmail.com>
+ * @author Konstantin Kudryashov <ever.zet@gmail.com>
  */
-class RunProcessor implements ProcessorInterface
+class RunProcessor extends Processor
 {
+    private $container;
+
     /**
-     * @see     Behat\Behat\Console\Configuration\ProcessorInterface::configure()
+     * Constructs processor.
+     *
+     * @param ContainerInterface $container Container instance
+     */
+    public function __construct(ContainerInterface $container)
+    {
+        $this->container = $container;
+    }
+
+    /**
+     * Configures command to be able to process it later.
+     *
+     * @param Command $command
      */
     public function configure(Command $command)
     {
@@ -46,65 +60,78 @@ class RunProcessor implements ProcessorInterface
     }
 
     /**
-     * @see     Behat\Behat\Console\Configuration\ProcessorInterface::process()
+     * Processes data from container and console input.
+     *
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     *
+     * @throws \RuntimeException
      */
-    public function process(ContainerInterface $container, InputInterface $input, OutputInterface $output)
+    public function process(InputInterface $input, OutputInterface $output)
     {
-        $runner         = $container->get('behat.runner');
-        $hookDispatcher = $container->get('behat.hook_dispatcher');
+        $command        = $this->container->get('behat.console.command');
+        $hookDispatcher = $this->container->get('behat.hook.dispatcher');
 
-        $runner->setStrict(
-            $input->getOption('strict') || $container->getParameter('behat.options.strict')
+        $command->setStrict(
+            $input->getOption('strict') || $this->container->getParameter('behat.options.strict')
         );
-        $runner->setDryRun(
-            $input->getOption('dry-run') || $container->getParameter('behat.options.dry_run')
+        $command->setDryRun(
+            $input->getOption('dry-run') || $this->container->getParameter('behat.options.dry_run')
         );
         $hookDispatcher->setDryRun(
-            $input->getOption('dry-run') || $container->getParameter('behat.options.dry_run')
+            $input->getOption('dry-run') || $this->container->getParameter('behat.options.dry_run')
         );
 
-        if ($file = $input->getOption('rerun') ?: $container->getParameter('behat.options.rerun')) {
+        if ($file = $input->getOption('rerun') ?: $this->container->getParameter('behat.options.rerun')) {
             if (file_exists($file)) {
-                $runner->setFeaturesPaths(explode("\n", trim(file_get_contents($file))));
+                $command->setFeaturesPaths(explode("\n", trim(file_get_contents($file))));
             }
 
-            $container->get('behat.format_manager')
+            $this->container->get('behat.formatter.manager')
                 ->initFormatter('failed')
                 ->setParameter('output_path', $file);
         }
 
-        if ($input->getOption('append-snippets') || $container->getParameter('behat.options.append_snippets')) {
-            $contextRefl = new \ReflectionClass(
-                $container->get('behat.context_dispatcher')->getContextClass()
-            );
-
-            if ($contextRefl->implementsInterface('Behat\Behat\Context\ClosuredContextInterface')) {
-                throw new \RuntimeException(
-                    '--append-snippets doesn\'t support closured contexts'
-                );
-            }
-
-            $formatManager = $container->get('behat.format_manager');
-            $formatManager->setFormattersParameter('snippets', false);
-
-            $formatter = $formatManager->initFormatter('snippets');
-            $formatter->setParameter('decorated', false);
-            $formatter->setParameter('output_decorate', false);
-            $formatter->setParameter('output', $snippets = fopen('php://memory', 'rw'));
-
-            $container->get('behat.event_dispatcher')
-                ->addListener('afterSuite', function() use($contextRefl, $snippets) {
-                    rewind($snippets);
-                    $snippets = stream_get_contents($snippets);
-
-                    if (trim($snippets)) {
-                        $snippets = strtr($snippets, array('\\' => '\\\\', '$' => '\\$'));
-                        $context  = file_get_contents($contextRefl->getFileName());
-                        $context  = preg_replace('/}[ \n]*$/', rtrim($snippets)."\n}\n", $context);
-
-                        file_put_contents($contextRefl->getFileName(), $context);
-                    }
-                }, -5);
+        if ($input->getOption('append-snippets') || $this->container->getParameter('behat.options.append_snippets')) {
+            $this->initializeSnippetsAppender();
         }
+    }
+
+    /**
+     * Appends snippets to the main context after suite run.
+     */
+    protected function initializeSnippetsAppender()
+    {
+        $contextRefl = new \ReflectionClass(
+            $this->container->get('behat.context.dispatcher')->getContextClass()
+        );
+
+        if ($contextRefl->implementsInterface('Behat\Behat\Context\ClosuredContextInterface')) {
+            throw new \RuntimeException(
+                '--append-snippets doesn\'t support closured contexts'
+            );
+        }
+
+        $formatManager = $this->container->get('behat.formatter.manager');
+        $formatManager->setFormattersParameter('snippets', false);
+
+        $formatter = $formatManager->initFormatter('snippets');
+        $formatter->setParameter('decorated', false);
+        $formatter->setParameter('output_decorate', false);
+        $formatter->setParameter('output', $snippets = fopen('php://memory', 'rw'));
+
+        $this->container->get('behat.event_dispatcher')
+            ->addListener('afterSuite', function() use($contextRefl, $snippets) {
+                rewind($snippets);
+                $snippets = stream_get_contents($snippets);
+
+                if (trim($snippets)) {
+                    $snippets = strtr($snippets, array('\\' => '\\\\', '$' => '\\$'));
+                    $context  = file_get_contents($contextRefl->getFileName());
+                    $context  = preg_replace('/}[ \n]*$/', rtrim($snippets)."\n}\n", $context);
+
+                    file_put_contents($contextRefl->getFileName(), $context);
+                }
+            }, -5);
     }
 }

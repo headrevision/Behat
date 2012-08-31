@@ -5,7 +5,8 @@ namespace Behat\Behat\Hook\Annotation;
 use Behat\Behat\Event\EventInterface;
 
 use Behat\Gherkin\Filter\TagFilter,
-    Behat\Gherkin\Filter\NameFilter;
+    Behat\Gherkin\Filter\NameFilter,
+    Behat\Gherkin\Node\BackgroundNode;
 
 /*
  * This file is part of the Behat.
@@ -18,7 +19,7 @@ use Behat\Gherkin\Filter\TagFilter,
 /**
  * StepHook hook class.
  *
- * @author      Konstantin Kudryashov <ever.zet@gmail.com>
+ * @author Konstantin Kudryashov <ever.zet@gmail.com>
  */
 abstract class StepHook extends FilterableHook
 {
@@ -31,7 +32,7 @@ abstract class StepHook extends FilterableHook
             return true;
         }
 
-        $scenario = $event->getStep()->getParent();
+        $scenario = $event->getLogicalParent();
 
         if (false !== strpos($filterString, '@')) {
             $filter = new TagFilter($filterString);
@@ -51,7 +52,9 @@ abstract class StepHook extends FilterableHook
     }
 
     /**
-     * @see     Behat\Behat\Hook\HookInterface::run()
+     * Runs hook callback.
+     *
+     * @param EventInterface $event
      */
     public function run(EventInterface $event)
     {

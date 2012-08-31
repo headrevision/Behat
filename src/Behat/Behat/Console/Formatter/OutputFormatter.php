@@ -16,7 +16,7 @@ use Symfony\Component\Console\Formatter\OutputFormatter as BaseOutputFormatter,
 /**
  * Behat console output formatter.
  *
- * @author      Konstantin Kudryashov <ever.zet@gmail.com>
+ * @author Konstantin Kudryashov <ever.zet@gmail.com>
  */
 class OutputFormatter extends BaseOutputFormatter
 {
@@ -43,11 +43,9 @@ class OutputFormatter extends BaseOutputFormatter
     /**
      * Formats a message according to the given styles.
      *
-     * @param  string $message The message to style
+     * @param string $message The message to style
      *
      * @return string The styled message
-     *
-     * @api
      */
     public function format($message)
     {

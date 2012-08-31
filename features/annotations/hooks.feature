@@ -147,7 +147,7 @@ Feature: hooks
         Scenario: 130
           Given I must have 130
       """
-    When I run "behat -f pretty"
+    When I run "behat --no-ansi -f pretty"
     Then it should pass with:
       """
       = do something BEFORE ANY SUITE
@@ -203,7 +203,7 @@ Feature: hooks
         Scenario: 130
           Given I must have 130
       """
-    When I run "behat -f pretty"
+    When I run "behat --no-ansi -f pretty"
     Then it should pass with:
       """
       = do something BEFORE ANY SUITE
@@ -234,4 +234,35 @@ Feature: hooks
       = do something AFTER ANY SUITE
       4 scenarios (4 passed)
       5 steps (5 passed)
+      """
+
+  Scenario: Background step hooks
+    Given a file named "features/background.feature" with:
+      """
+      Feature:
+        Background:
+          Given I must have 50
+
+        Scenario:
+          Given I have entered 12
+          Then I must have 12
+      """
+    When I run "behat --no-ansi -f pretty"
+    Then it should pass with:
+      """
+      = do something BEFORE ANY SUITE
+      = do something BEFORE EVERY FEATURE
+      Feature:
+
+        Background:            # features/background.feature:2
+          Given I must have 50 # FeatureContext::iMustHave()
+
+        Scenario:                 # features/background.feature:5
+          Given I have entered 12 # FeatureContext::iHaveEntered()
+          Then I must have 12     # FeatureContext::iMustHave()
+
+      = do something AFTER EVERY FEATURE
+      = do something AFTER ANY SUITE
+      1 scenario (1 passed)
+      3 steps (3 passed)
       """

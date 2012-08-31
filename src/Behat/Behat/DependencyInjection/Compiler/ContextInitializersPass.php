@@ -16,26 +16,26 @@ use Symfony\Component\DependencyInjection\Reference,
  */
 
 /**
- * ContextReader pass - registers all available context loaders.
+ * Context initializers pass - registers all available context initializers.
  *
- * @author      Konstantin Kudryashov <ever.zet@gmail.com>
+ * @author Konstantin Kudryashov <ever.zet@gmail.com>
  */
-class ContextReaderPass implements CompilerPassInterface
+class ContextInitializersPass implements CompilerPassInterface
 {
     /**
      * Processes container.
      *
-     * @param   Symfony\Component\DependencyInjection\ContainerBuilder  $container
+     * @param ContainerBuilder $container
      */
     public function process(ContainerBuilder $container)
     {
-        if (!$container->hasDefinition('behat.context_reader')) {
+        if (!$container->hasDefinition('behat.context.dispatcher')) {
             return;
         }
-        $readerDefinition = $container->getDefinition('behat.context_reader');
+        $dispatcher = $container->getDefinition('behat.context.dispatcher');
 
-        foreach ($container->findTaggedServiceIds('behat.context_loader') as $id => $attributes) {
-            $readerDefinition->addMethodCall('addLoader', array(new Reference($id)));
+        foreach ($container->findTaggedServiceIds('behat.context.initializer') as $id => $attributes) {
+            $dispatcher->addMethodCall('addInitializer', array(new Reference($id)));
         }
     }
 }

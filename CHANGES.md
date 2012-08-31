@@ -1,3 +1,67 @@
+2.4.3 / 2012-07-28
+==================
+
+  * Fixed broken `output_path` setting ([issue #169](https://github.com/Behat/Behat/issues/169))
+  * Added shellbang to phar executable ([issue #167](https://github.com/Behat/Behat/issues/167))
+  * Added feature title to progress exceptions ([issue #166](https://github.com/Behat/Behat/issues/166))
+  * Tuned failed formatter to print only failed examples in outline ([issue #154](https://github.com/Behat/Behat/issues/154))
+  * Small bugfixes
+
+2.4.2 / 2012-06-26
+==================
+
+  * Fixed broken autoloading with Composer installation
+
+2.4.1 / 2012-06-26
+==================
+
+  * Force custom context class usage if user changed it from `FeatureContext`
+  * Clarified `Context class not found` exception
+  * Use CWD for CLI options, basepath (config path) for everything else
+  * Pass `behat.extension.classes` container param to extensions during their load
+  * Tuned `event_subscriber` priorities
+  * Use `require_once` instead of `require` in closured loaders
+  * Fixed transformers bug with falsy transformations (that return **falsy** values)
+  * Fixed custom formatters definition bug
+  * Fixed formatter manager exception bug
+  * Fixed czech translation
+  * Fixed CS to be PSR2 compliant
+
+2.4.0 / 2012-05-15
+==================
+
+  * New extension system based on Symfony2 DIC component
+  * Refactored paths reading system (now relative paths are fully supported)
+  * Support latest Composer changes
+  * Removed static constraint for transformations
+  * Updated to latest Gherkin with immutable AST
+  * Fixed couple of definition snippet generator bugs
+  * Option for HTML formatter to provide step definition links
+  * Added fallback locale (in case if provided lang is unsupported yet)
+  * Print step snippets in HTML formatter only if they're enabled
+  * Escape placeholder brackets in HTML formatter
+  * Use different names for examples in JUnit formatter
+  * Major core cleanup
+
+2.3.5 / 2012-03-30
+==================
+
+  * Fixed formatter language configuration and locale guesser
+
+2.3.4 / 2012-03-28
+==================
+
+  * Added `StepEvent::getLogicalParent()`. Fixed issue #115
+
+2.3.3 / 2012-03-09
+==================
+
+  * Implemented Gherkin caching support ([--cache](https://github.com/Behat/Behat/commit/753c4f6e392a873a640543306191d92e6dc91099))
+  * Line ranges filtering support (`behat features/some.feature:12-19`. Thanks @headrevision)
+  * `behat.yml.dist` configs support out of the box
+  * Minor bug fixes
+  * Updated Gherkin
+
 2.3.2 / 2012-01-29
 ==================
 

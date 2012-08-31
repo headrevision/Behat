@@ -8,8 +8,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface,
     Symfony\Component\Console\Input\InputOption,
     Symfony\Component\Console\Output\OutputInterface;
 
-use Behat\Behat\PathLocator;
-
 /*
  * This file is part of the Behat.
  * (c) Konstantin Kudryashov <ever.zet@gmail.com>
@@ -21,12 +19,26 @@ use Behat\Behat\PathLocator;
 /**
  * Init operation processor.
  *
- * @author      Konstantin Kudryashov <ever.zet@gmail.com>
+ * @author Konstantin Kudryashov <ever.zet@gmail.com>
  */
-class InitProcessor implements ProcessorInterface
+class InitProcessor extends Processor
 {
+    private $container;
+
     /**
-     * @see     Behat\Behat\Console\Configuration\ProcessorInterface::confiugre()
+     * Constructs processor.
+     *
+     * @param ContainerInterface $container Container instance
+     */
+    public function __construct(ContainerInterface $container)
+    {
+        $this->container = $container;
+    }
+
+    /**
+     * Configures command to be able to process it later.
+     *
+     * @param Command $command
      */
     public function configure(Command $command)
     {
@@ -36,12 +48,15 @@ class InitProcessor implements ProcessorInterface
     }
 
     /**
-     * @see     Behat\Behat\Console\Configuration\ProcessorInterface::process()
+     * Processes data from container and console input.
+     *
+     * @param InputInterface  $input
+     * @param OutputInterface $output
      */
-    public function process(ContainerInterface $container, InputInterface $input, OutputInterface $output)
+    public function process(InputInterface $input, OutputInterface $output)
     {
         if ($input->getOption('init')) {
-            $this->initFeaturesDirectoryStructure($container->get('behat.path_locator'), $output);
+            $this->initFeaturesDirectoryStructure($output);
 
             exit(0);
         }
@@ -50,14 +65,13 @@ class InitProcessor implements ProcessorInterface
     /**
      * Creates features path structure (initializes behat tests structure).
      *
-     * @param   Behat\Behat\PathLocator                             $locator    path locator
-     * @param   Symfony\Component\Console\Input\OutputInterface     $output     output console
+     * @param OutputInterface $output output console
      */
-    protected function initFeaturesDirectoryStructure(PathLocator $locator, OutputInterface $output)
+    protected function initFeaturesDirectoryStructure(OutputInterface $output)
     {
-        $basePath       = realpath($locator->getWorkPath()) . DIRECTORY_SEPARATOR;
-        $featuresPath   = $locator->getFeaturesPath();
-        $bootstrapPath  = $locator->getBootstrapPath();
+        $basePath       = $this->container->getParameter('behat.paths.base').DIRECTORY_SEPARATOR;
+        $featuresPath   = $this->container->getParameter('behat.paths.features');
+        $bootstrapPath  = $this->container->getParameter('behat.paths.bootstrap');
 
         if (!is_dir($featuresPath)) {
             mkdir($featuresPath, 0777, true);
@@ -77,13 +91,13 @@ class InitProcessor implements ProcessorInterface
             );
 
             file_put_contents(
-                $bootstrapPath . DIRECTORY_SEPARATOR . 'FeatureContext.php',
+                $bootstrapPath.DIRECTORY_SEPARATOR.'FeatureContext.php',
                 $this->getFeatureContextSkelet()
             );
 
             $output->writeln(
                 '<info>+f</info> ' .
-                str_replace($basePath, '', realpath($bootstrapPath)) . DIRECTORY_SEPARATOR .
+                str_replace($basePath, '', realpath($bootstrapPath)).DIRECTORY_SEPARATOR.
                 'FeatureContext.php <comment>- place your feature related code here</comment>'
             );
         }
@@ -92,7 +106,7 @@ class InitProcessor implements ProcessorInterface
     /**
      * Returns feature context skelet.
      *
-     * @return  string
+     * @return string
      */
     protected function getFeatureContextSkelet()
     {
@@ -122,7 +136,7 @@ class FeatureContext extends BehatContext
      * Initializes context.
      * Every scenario gets it's own context object.
      *
-     * @param   array   $parameters     context parameters (set them up through behat.yml)
+     * @param array $parameters context parameters (set them up through behat.yml)
      */
     public function __construct(array $parameters)
     {

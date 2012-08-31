@@ -2,7 +2,8 @@
 
 namespace Behat\Behat\Context;
 
-use Behat\Behat\Context\Loader\ContextLoaderInterface;
+use Behat\Behat\Definition\DefinitionDispatcher,
+    Behat\Behat\Hook\HookDispatcher;
 
 /*
  * This file is part of the Behat.
@@ -15,39 +16,29 @@ use Behat\Behat\Context\Loader\ContextLoaderInterface;
 /**
  * Context reader.
  *
- * @author      Konstantin Kudryashov <ever.zet@gmail.com>
+ * @author Konstantin Kudryashov <ever.zet@gmail.com>
  */
 class ContextReader
 {
-    /**
-     * Context dispatcher.
-     *
-     * @var     Behat\Behat\Context\ContextDispatcher
-     */
-    private $dispatcher;
-    /**
-     * Context loaders.
-     *
-     * @var     array
-     */
+    private $contextDispatcher;
     private $loaders = array();
 
     /**
      * Initializes context reader.
      *
-     * @param   Behat\Behat\Context\ContextDispatcher   $dispatcher context dispatcher
+     * @param ContextDispatcher $contextDispatcher
      */
-    public function __construct(ContextDispatcher $dispatcher)
+    public function __construct(ContextDispatcher $contextDispatcher)
     {
-        $this->dispatcher = $dispatcher;
+        $this->contextDispatcher = $contextDispatcher;
     }
 
     /**
      * Adds context loader to the list of available loaders.
      *
-     * @param   Behat\Behat\Context\Loader\ContextLoaderInterface   $loader
+     * @param Loader\LoaderInterface $loader
      */
-    public function addLoader(ContextLoaderInterface $loader)
+    public function addLoader(Loader\LoaderInterface $loader)
     {
         $this->loaders[] = $loader;
     }
@@ -57,13 +48,13 @@ class ContextReader
      */
     public function read()
     {
-        $this->readFromContext($this->dispatcher->createContext());
+        $this->readFromContext($this->contextDispatcher->createContext());
     }
 
     /**
      * Reads definition data from specific context class.
      *
-     * @param   Behat\Behat\Context\ContextInterface    $context
+     * @param ContextInterface $context
      */
     private function readFromContext(ContextInterface $context)
     {
@@ -73,8 +64,10 @@ class ContextReader
             }
         }
 
-        foreach ($context->getSubcontexts() as $subcontext) {
-            $this->readFromContext($subcontext);
+        if ($context instanceof SubcontextableContextInterface) {
+            foreach ($context->getSubcontexts() as $subcontext) {
+                $this->readFromContext($subcontext);
+            }
         }
     }
 }

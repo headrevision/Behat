@@ -12,9 +12,10 @@
             "homepage":  "http://everzet.com"
         }
     ],
+
     "require": {
         "php":                           ">=5.3.1",
-        "behat/gherkin":                 ">=2.0.1,<2.1.0-dev",
+        "behat/gherkin":                 ">=2.2.0,<2.3.0-dev",
         "symfony/console":               ">=2.0.0,<2.2.0-dev",
         "symfony/config":                ">=2.0.0,<2.2.0-dev",
         "symfony/dependency-injection":  ">=2.0.0,<2.2.0-dev",
@@ -23,10 +24,18 @@
         "symfony/yaml":                  ">=2.0.0,<2.2.0-dev",
         "symfony/finder":                ">=2.0.0,<2.2.0-dev"
     },
+
+    "suggest": {
+        "behat/symfony2-extension":  "for integration with Symfony2 web framework",
+        "behat/yii-extension":       "for integration with Yii web framework",
+        "behat/mink-extension":      "for integration with Mink testing framework"
+    },
+
     "autoload": {
         "psr-0": {
             "Behat\\Behat": "src/"
         }
     },
+
     "bin": ["bin/behat"]
 }

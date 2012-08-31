@@ -13,21 +13,8 @@ namespace Behat\Behat\Context;
 /**
  * Context interface.
  *
- * @author      Konstantin Kudryashov <ever.zet@gmail.com>
+ * @author Konstantin Kudryashov <ever.zet@gmail.com>
  */
 interface ContextInterface
 {
-    /**
-     * Returns all added subcontexts.
-     *
-     * @return  array
-     */
-    function getSubcontexts();
-
-    /**
-     * Finds subcontext by it's name.
-     *
-     * @return  Behat\Behat\Context\ContextInterface
-     */
-    function getSubcontextByClassName($className);
 }

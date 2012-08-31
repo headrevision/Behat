@@ -13,21 +13,21 @@ namespace Behat\Behat\Context;
 /**
  * Closured context interface.
  *
- * @author      Konstantin Kudryashov <ever.zet@gmail.com>
+ * @author Konstantin Kudryashov <ever.zet@gmail.com>
  */
 interface ClosuredContextInterface extends ContextInterface
 {
     /**
      * Returns array of step definition files (*.php).
      *
-     * @return  array
+     * @return array
      */
-    function getStepDefinitionResources();
+    public function getStepDefinitionResources();
 
     /**
      * Returns array of hook definition files (*.php).
      *
-     * @return  array
+     * @return array
      */
-    function getHookDefinitionResources();
+    public function getHookDefinitionResources();
 }

@@ -15,7 +15,7 @@ use Symfony\Component\Finder\Finder;
 /**
  * Pear package compiler.
  *
- * @author      Konstantin Kudryashov <ever.zet@gmail.com>
+ * @author Konstantin Kudryashov <ever.zet@gmail.com>
  */
 class PearCompiler
 {
@@ -37,7 +37,7 @@ class PearCompiler
     /**
      * Compiles pear package.
      *
-     * @param   string  $version
+     * @param string $version
      */
     public function compile($version, $stability)
     {
@@ -78,10 +78,10 @@ class PearCompiler
     /**
      * Replaces tokens in specified path.
      *
-     * @param   string|array    $files          files array or single file
-     * @param   string          $tokenStart     token start symbol
-     * @param   string          $tokenFinish    token finish symbol
-     * @param   array           $tokens         replace tokens array
+     * @param string|array $files       files array or single file
+     * @param string       $tokenStart  token start symbol
+     * @param string       $tokenFinish token finish symbol
+     * @param array        $tokens      replace tokens array
      */
     protected function replaceTokens($files, $tokenStart, $tokenFinish, array $tokens)
     {
@@ -101,7 +101,7 @@ class PearCompiler
     /**
      * Returns pear package template.
      *
-     * @return  string
+     * @return string
      */
     protected function getPackageTemplate()
     {
@@ -167,35 +167,58 @@ class PearCompiler
             <package>
                 <name>gherkin</name>
                 <channel>pear.behat.org</channel>
-                <min>2.0.0</min>
+                <min>2.2.1</min>
+                <max>2.3.0</max>
+                <exclude>2.3.0</exclude>
             </package>
             <package>
                 <name>Config</name>
                 <channel>pear.symfony.com</channel>
+                <min>2.0.0</min>
+                <max>2.3.0</max>
+                <exclude>2.3.0</exclude>
             </package>
             <package>
                 <name>Console</name>
                 <channel>pear.symfony.com</channel>
+                <min>2.0.0</min>
+                <max>2.3.0</max>
+                <exclude>2.3.0</exclude>
             </package>
             <package>
                 <name>DependencyInjection</name>
                 <channel>pear.symfony.com</channel>
+                <min>2.0.0</min>
+                <max>2.3.0</max>
+                <exclude>2.3.0</exclude>
             </package>
             <package>
                 <name>EventDispatcher</name>
                 <channel>pear.symfony.com</channel>
+                <min>2.0.0</min>
+                <max>2.3.0</max>
+                <exclude>2.3.0</exclude>
             </package>
             <package>
                 <name>Finder</name>
                 <channel>pear.symfony.com</channel>
+                <min>2.0.0</min>
+                <max>2.3.0</max>
+                <exclude>2.3.0</exclude>
             </package>
             <package>
                 <name>Translation</name>
                 <channel>pear.symfony.com</channel>
+                <min>2.0.0</min>
+                <max>2.3.0</max>
+                <exclude>2.3.0</exclude>
             </package>
             <package>
                 <name>Yaml</name>
                 <channel>pear.symfony.com</channel>
+                <min>2.0.0</min>
+                <max>2.3.0</max>
+                <exclude>2.3.0</exclude>
             </package>
             <extension>
                 <name>pcre</name>

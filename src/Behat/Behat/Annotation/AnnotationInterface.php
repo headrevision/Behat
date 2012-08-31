@@ -13,35 +13,35 @@ namespace Behat\Behat\Annotation;
 /**
  * Behat annotation interface.
  *
- * @author      Konstantin Kudryashov <ever.zet@gmail.com>
+ * @author Konstantin Kudryashov <ever.zet@gmail.com>
  */
 interface AnnotationInterface
 {
     /**
      * Returns path string for callback.
      *
-     * @return  string
+     * @return string
      */
-    function getPath();
+    public function getPath();
 
     /**
      * Checks whether callback is closure.
      *
-     * @return  Boolean
+     * @return Boolean
      */
-    function isClosure();
+    public function isClosure();
 
     /**
      * Returns callback.
      *
-     * @param   Callback
+     * @return callback
      */
-    function getCallback();
+    public function getCallback();
 
     /**
      * Returns callback reflection.
      *
-     * @return  ReflectionFunction
+     * @return \ReflectionFunction
      */
-    function getCallbackReflection();
+    public function getCallbackReflection();
 }

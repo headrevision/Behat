@@ -16,26 +16,26 @@ use Symfony\Component\DependencyInjection\Reference,
  */
 
 /**
- * Gherkin pass - registers all available Gherkin loaders.
+ * Definition proposals pass - registers all available definition proposals.
  *
- * @author      Konstantin Kudryashov <ever.zet@gmail.com>
+ * @author Konstantin Kudryashov <ever.zet@gmail.com>
  */
-class GherkinPass implements CompilerPassInterface
+class DefinitionProposalsPass implements CompilerPassInterface
 {
     /**
      * Processes container.
      *
-     * @param   Symfony\Component\DependencyInjection\ContainerBuilder  $container
+     * @param ContainerBuilder $container
      */
     public function process(ContainerBuilder $container)
     {
-        if (!$container->hasDefinition('gherkin')) {
+        if (!$container->hasDefinition('behat.definition.proposal_dispatcher')) {
             return;
         }
-        $gherkinDefinition = $container->getDefinition('gherkin');
+        $dispatcher = $container->getDefinition('behat.definition.proposal_dispatcher');
 
-        foreach ($container->findTaggedServiceIds('gherkin.loader') as $id => $attributes) {
-            $gherkinDefinition->addMethodCall('addLoader', array(new Reference($id)));
+        foreach ($container->findTaggedServiceIds('behat.definition.proposal') as $id => $attributes) {
+            $dispatcher->addMethodCall('addProposal', array(new Reference($id)));
         }
     }
 }

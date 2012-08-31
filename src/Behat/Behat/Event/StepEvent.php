@@ -8,7 +8,8 @@ use Behat\Behat\Context\ContextInterface,
     Behat\Behat\Definition\DefinitionInterface,
     Behat\Behat\Definition\DefinitionSnippet;
 
-use Behat\Gherkin\Node\StepNode;
+use Behat\Gherkin\Node\StepNode,
+    Behat\Gherkin\Node\ScenarioNode;
 
 /*
  * This file is part of the Behat.
@@ -21,7 +22,7 @@ use Behat\Gherkin\Node\StepNode;
 /**
  * Step event.
  *
- * @author      Konstantin Kudryashov <ever.zet@gmail.com>
+ * @author Konstantin Kudryashov <ever.zet@gmail.com>
  */
 class StepEvent extends Event implements EventInterface
 {
@@ -32,6 +33,7 @@ class StepEvent extends Event implements EventInterface
     const FAILED    = 4;
 
     private $step;
+    private $parent;
     private $context;
     private $result;
     private $definition;
@@ -41,18 +43,20 @@ class StepEvent extends Event implements EventInterface
     /**
      * Initializes step event.
      *
-     * @param   Behat\Gherkin\Node\StepNode                 $step
-     * @param   Behat\Behat\Context\ContextInterface        $context
-     * @param   integer                                     $result
-     * @param   Behat\Behat\Definition\DefinitionInterface  $definition
-     * @param   Exception                                   $exception
-     * @param   Behat\Behat\Definition\DefinitionSnippet    $snippet
+     * @param StepNode            $step
+     * @param ScenarioNode        $parent
+     * @param ContextInterface    $context
+     * @param integer             $result
+     * @param DefinitionInterface $definition
+     * @param \Exception          $exception
+     * @param DefinitionSnippet   $snippet
      */
-    public function __construct(StepNode $step, ContextInterface $context, $result = null,
-                                DefinitionInterface $definition = null, \Exception $exception = null,
-                                DefinitionSnippet $snippet = null)
+    public function __construct(StepNode $step, ScenarioNode $parent, ContextInterface $context,
+                                $result = null, DefinitionInterface $definition = null,
+                                \Exception $exception = null, DefinitionSnippet $snippet = null)
     {
         $this->step       = $step;
+        $this->parent     = $parent;
         $this->context    = $context;
         $this->result     = $result;
         $this->definition = $definition;
@@ -63,7 +67,7 @@ class StepEvent extends Event implements EventInterface
     /**
      * Returns step node.
      *
-     * @return  Behat\Gherkin\Node\StepNode
+     * @return StepNode
      */
     public function getStep()
     {
@@ -71,9 +75,19 @@ class StepEvent extends Event implements EventInterface
     }
 
     /**
+     * Returns logical parent to the step, which is always a ScenarioNode.
+     *
+     * @return ScenarioNode
+     */
+    public function getLogicalParent()
+    {
+        return $this->parent;
+    }
+
+    /**
      * Returns context object.
      *
-     * @return  Behat\Behat\Context\ContextInterface
+     * @return ContextInterface
      */
     public function getContext()
     {
@@ -83,7 +97,7 @@ class StepEvent extends Event implements EventInterface
     /**
      * Returns step tester result code.
      *
-     * @return  integer
+     * @return integer
      */
     public function getResult()
     {
@@ -93,7 +107,7 @@ class StepEvent extends Event implements EventInterface
     /**
      * Returns step definition object.
      *
-     * @return  Behat\Behat\Definition\Definition
+     * @return DefinitionInterface
      */
     public function getDefinition()
     {
@@ -103,7 +117,7 @@ class StepEvent extends Event implements EventInterface
     /**
      * Checks whether event contains step definition.
      *
-     * @return  Boolean
+     * @return Boolean
      */
     public function hasDefinition()
     {
@@ -113,7 +127,7 @@ class StepEvent extends Event implements EventInterface
     /**
      * Returns step tester exception.
      *
-     * @return  Exception
+     * @return \Exception
      */
     public function getException()
     {
@@ -123,7 +137,7 @@ class StepEvent extends Event implements EventInterface
     /**
      * Checks whether event contains exception.
      *
-     * @return  Boolean
+     * @return Boolean
      */
     public function hasException()
     {
@@ -133,7 +147,7 @@ class StepEvent extends Event implements EventInterface
     /**
      * Returns step snippet.
      *
-     * @return  Behat\Behat\Definition\DefinitionSnippet
+     * @return DefinitionSnippet
      */
     public function getSnippet()
     {
@@ -143,7 +157,7 @@ class StepEvent extends Event implements EventInterface
     /**
      * Checks whether event contains snippet.
      *
-     * @return  Boolean
+     * @return Boolean
      */
     public function hasSnippet()
     {

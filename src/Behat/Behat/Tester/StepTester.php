@@ -7,7 +7,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface,
 
 use Behat\Gherkin\Node\NodeVisitorInterface,
     Behat\Gherkin\Node\AbstractNode,
-    Behat\Gherkin\Node\StepNode;
+    Behat\Gherkin\Node\StepNode,
+    Behat\Gherkin\Node\ScenarioNode;
 
 use Behat\Behat\Context\ContextInterface,
     Behat\Behat\Context\Step\SubstepInterface,
@@ -28,56 +29,41 @@ use Behat\Behat\Context\ContextInterface,
 /**
  * Step Tester.
  *
- * @author      Konstantin Kudryashov <ever.zet@gmail.com>
+ * @author Konstantin Kudryashov <ever.zet@gmail.com>
  */
 class StepTester implements NodeVisitorInterface
 {
-    /**
-     * Event dispatcher.
-     *
-     * @var     Symfony\Component\EventDispatcher\EventDispatcher
-     */
+    private $logicalParent;
     private $dispatcher;
-    /**
-     * Context.
-     *
-     * @var     Behat\Behat\Context\ContextInterface
-     */
     private $context;
-    /**
-     * Definition dispatcher.
-     *
-     * @var     Behat\Behat\Definition\DefinitionDispatcher
-     */
     private $definitions;
-    /**
-     * Step replace tokens.
-     *
-     * @var     array
-     */
-    private $tokens = array();
-    /**
-     * Is step marked as skipped.
-     *
-     * @var     boolean
-     */
     private $skip = false;
 
     /**
      * Initializes tester.
      *
-     * @param   Symfony\Component\DependencyInjection\ContainerInterface    $container  service container
+     * @param ContainerInterface $container
      */
     public function __construct(ContainerInterface $container)
     {
         $this->dispatcher  = $container->get('behat.event_dispatcher');
-        $this->definitions = $container->get('behat.definition_dispatcher');
+        $this->definitions = $container->get('behat.definition.dispatcher');
+    }
+
+    /**
+     * Sets logical parent of the step, which is always a ScenarioNode.
+     *
+     * @param ScenarioNode $parent
+     */
+    public function setLogicalParent(ScenarioNode $parent)
+    {
+        $this->logicalParent = $parent;
     }
 
     /**
      * Sets run context.
      *
-     * @param   Behat\Behat\Context\ContextInterface    $context
+     * @param ContextInterface $context
      */
     public function setContext(ContextInterface $context)
     {
@@ -85,19 +71,9 @@ class StepTester implements NodeVisitorInterface
     }
 
     /**
-     * Sets step replacements for tokens.
-     *
-     * @param   array   $tokens     step tokens
-     */
-    public function setTokens(array $tokens)
-    {
-        $this->tokens = $tokens;
-    }
-
-    /**
      * Marks test as skipped.
      *
-     * @param   boolean $skip   skip test?
+     * @param Boolean $skip skip test?
      */
     public function skip($skip = true)
     {
@@ -107,15 +83,15 @@ class StepTester implements NodeVisitorInterface
     /**
      * Visits & tests StepNode.
      *
-     * @param   Behat\Gherkin\Node\AbstractNode $step
+     * @param AbstractNode $step
      *
-     * @return  integer
+     * @return integer
      */
     public function visit(AbstractNode $step)
     {
-        $step->setTokens($this->tokens);
-
-        $this->dispatcher->dispatch('beforeStep', new StepEvent($step, $this->context));
+        $this->dispatcher->dispatch('beforeStep', new StepEvent(
+            $step, $this->logicalParent, $this->context
+        ));
         $afterEvent = $this->executeStep($step);
         $this->dispatcher->dispatch('afterStep', $afterEvent);
 
@@ -125,9 +101,9 @@ class StepTester implements NodeVisitorInterface
     /**
      * Searches and runs provided step with DefinitionDispatcher.
      *
-     * @param   Behat\Gherkin\Node\StepNode $step   step node
+     * @param StepNode $step step node
      *
-     * @return  Behat\Behat\Event\StepEvent
+     * @return StepEvent
      */
     protected function executeStep(StepNode $step)
     {
@@ -141,7 +117,9 @@ class StepTester implements NodeVisitorInterface
             $definition = $this->definitions->findDefinition($this->context, $step);
 
             if ($this->skip) {
-                return new StepEvent($step, $context, StepEvent::SKIPPED, $definition);
+                return new StepEvent(
+                    $step, $this->logicalParent, $context, StepEvent::SKIPPED, $definition
+                );
             }
 
             try {
@@ -163,27 +141,29 @@ class StepTester implements NodeVisitorInterface
             $exception = $e;
         }
 
-        return new StepEvent($step, $context, $result, $definition, $exception, $snippet);
+        return new StepEvent(
+            $step, $this->logicalParent, $context, $result, $definition, $exception, $snippet
+        );
     }
 
     /**
      * Executes provided step definition.
      *
-     * @param   Behat\Gherkin\Node\StepNode                 $step       step node
-     * @param   Behat\Behat\Definition\DefinitionInterface  $definition step definition
+     * @param StepNode            $step       step node
+     * @param DefinitionInterface $definition step definition
      */
     protected function executeStepDefinition(StepNode $step, DefinitionInterface $definition)
     {
-        $this->executeStepsChain(
-            $step, $definition->run($this->context, $this->tokens)
-        );
+        $this->executeStepsChain($step, $definition->run($this->context));
     }
 
     /**
      * Executes steps chain (if there's one).
      *
-     * @param   Behat\Gherkin\Node\StepNode $step  step node
-     * @param   mixed                       $chain chain
+     * @param StepNode $step  step node
+     * @param mixed    $chain chain
+     *
+     * @throws \Exception
      */
     private function executeStepsChain(StepNode $step, $chain = null)
     {

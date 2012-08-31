@@ -40,7 +40,7 @@ Feature: Different result types
 
       class FeatureContext extends BehatContext {}
       """
-    When I run "behat -f progress features/coffee.feature"
+    When I run "behat --no-ansi -f progress features/coffee.feature"
     Then it should pass with:
       """
       UUUUUU
@@ -53,7 +53,7 @@ Feature: Different result types
           /**
            * @Given /^I have magically created (\d+)\$$/
            */
-          public function iHaveMagicallyCreated($argument1)
+          public function iHaveMagicallyCreated($arg1)
           {
               throw new PendingException();
           }
@@ -61,7 +61,7 @@ Feature: Different result types
           /**
            * @When /^I have chose "([^"]*)" in coffee machine$/
            */
-          public function iHaveChoseInCoffeeMachine($argument1)
+          public function iHaveChoseInCoffeeMachine($arg1)
           {
               throw new PendingException();
           }
@@ -69,12 +69,12 @@ Feature: Different result types
           /**
            * @Then /^I should have "([^"]*)"$/
            */
-          public function iShouldHave($argument1)
+          public function iShouldHave($arg1)
           {
               throw new PendingException();
           }
       """
-    When I run "behat --strict -f progress features/coffee.feature"
+    When I run "behat --no-ansi --strict -f progress features/coffee.feature"
     Then it should fail with:
       """
       UUUUUU
@@ -87,7 +87,7 @@ Feature: Different result types
           /**
            * @Given /^I have magically created (\d+)\$$/
            */
-          public function iHaveMagicallyCreated($argument1)
+          public function iHaveMagicallyCreated($arg1)
           {
               throw new PendingException();
           }
@@ -95,7 +95,7 @@ Feature: Different result types
           /**
            * @When /^I have chose "([^"]*)" in coffee machine$/
            */
-          public function iHaveChoseInCoffeeMachine($argument1)
+          public function iHaveChoseInCoffeeMachine($arg1)
           {
               throw new PendingException();
           }
@@ -103,7 +103,7 @@ Feature: Different result types
           /**
            * @Then /^I should have "([^"]*)"$/
            */
-          public function iShouldHave($argument1)
+          public function iShouldHave($arg1)
           {
               throw new PendingException();
           }
@@ -136,7 +136,7 @@ Feature: Different result types
           /**
            * @Given /^human have ordered very very very hot "([^"]*)"$/
            */
-          public function humanOrdered($argument1) {
+          public function humanOrdered($arg1) {
               throw new PendingException;
           }
 
@@ -148,7 +148,7 @@ Feature: Different result types
           }
       }
       """
-    When I run "behat -f progress features/coffee.feature"
+    When I run "behat --no-ansi -f progress features/coffee.feature"
     Then it should pass with:
       """
       P-U
@@ -158,6 +158,7 @@ Feature: Different result types
       01. TODO: write pending definition
           In step `Given human have ordered very very very hot "coffee"'. # FeatureContext::humanOrdered()
           From scenario background.                                       # features/coffee.feature:6
+          Of feature `Pending coffee machine actions'.                    # features/coffee.feature
 
       1 scenario (1 undefined)
       3 steps (1 skipped, 1 pending, 1 undefined)
@@ -167,12 +168,12 @@ Feature: Different result types
           /**
            * @Then /^I should say "([^"]*)"$/
            */
-          public function iShouldSay($argument1)
+          public function iShouldSay($arg1)
           {
               throw new PendingException();
           }
       """
-    When I run "behat --strict -f progress features/coffee.feature"
+    When I run "behat --no-ansi --strict -f progress features/coffee.feature"
     Then it should fail with:
       """
       P-U
@@ -182,6 +183,7 @@ Feature: Different result types
       01. TODO: write pending definition
           In step `Given human have ordered very very very hot "coffee"'. # FeatureContext::humanOrdered()
           From scenario background.                                       # features/coffee.feature:6
+          Of feature `Pending coffee machine actions'.                    # features/coffee.feature
 
       1 scenario (1 undefined)
       3 steps (1 skipped, 1 pending, 1 undefined)
@@ -191,7 +193,7 @@ Feature: Different result types
           /**
            * @Then /^I should say "([^"]*)"$/
            */
-          public function iShouldSay($argument1)
+          public function iShouldSay($arg1)
           {
               throw new PendingException();
           }
@@ -244,7 +246,7 @@ Feature: Different result types
           }
       }
       """
-    When I run "behat -f progress features/coffee.feature"
+    When I run "behat --no-ansi -f progress features/coffee.feature"
     Then it should fail with:
       """
       .F..F-
@@ -254,10 +256,12 @@ Feature: Different result types
       01. Failed asserting that 10 matches expected '12'.
           In step `Then I should see 12$ on the screen'. # FeatureContext::iShouldSee()
           From scenario `Check throwed amount'.          # features/coffee.feature:9
+          Of feature `Failed coffee machine actions'.    # features/coffee.feature
 
       02. Failed asserting that 30 matches expected '31'.
           In step `Then I should see 31$ on the screen'. # FeatureContext::iShouldSee()
           From scenario `Additional throws'.             # features/coffee.feature:12
+          Of feature `Failed coffee machine actions'.    # features/coffee.feature
 
       2 scenarios (2 failed)
       6 steps (3 passed, 1 skipped, 2 failed)
@@ -332,7 +336,7 @@ Feature: Different result types
           }
       }
       """
-    When I run "behat -f progress features/coffee.feature"
+    When I run "behat --no-ansi -f progress features/coffee.feature"
     Then it should fail with:
       """
       .F---..F--
@@ -340,12 +344,14 @@ Feature: Different result types
       (::) failed steps (::)
 
       01. NO water in coffee machine!!!
-          In step `Given I have no water'. # FeatureContext::noWater()
-          From scenario `I have no water'. # features/coffee.feature:9
+          In step `Given I have no water'.             # FeatureContext::noWater()
+          From scenario `I have no water'.             # features/coffee.feature:9
+          Of feature `Skipped coffee machine actions'. # features/coffee.feature
 
       02. NO electricity in coffee machine!!!
-          In step `And I have no electricity'.   # FeatureContext::haveNoElectricity()
-          From scenario `I have no electricity'. # features/coffee.feature:15
+          In step `And I have no electricity'.         # FeatureContext::haveNoElectricity()
+          From scenario `I have no electricity'.       # features/coffee.feature:15
+          Of feature `Skipped coffee machine actions'. # features/coffee.feature
 
       2 scenarios (2 failed)
       10 steps (3 passed, 5 skipped, 2 failed)
@@ -375,7 +381,7 @@ Feature: Different result types
       class FeatureContext extends BehatContext
       {
           /** @Given /^human have chosen "([^"]*)"$/ */
-          public function chosen($argument1) {
+          public function chosen($arg1) {
               throw new PendingException;
           }
 
@@ -392,7 +398,7 @@ Feature: Different result types
           }
       }
       """
-    When I run "behat -f progress features/coffee.feature"
+    When I run "behat --no-ansi -f progress features/coffee.feature"
     Then it should fail with:
       """
       F-
@@ -403,7 +409,8 @@ Feature: Different result types
           to `/^human have chosen "([^"]*)"$/` from FeatureContext::chosen()
           to `/^human have chosen "Latte"$/` from FeatureContext::chosenLatte()
           In step `Given human have chosen "Latte"'.
-          From scenario `Ambigious coffee type'.     # features/coffee.feature:6
+          From scenario `Ambigious coffee type'.        # features/coffee.feature:6
+          Of feature `Ambigious orders in coffee menu'. # features/coffee.feature
 
       1 scenario (1 failed)
       2 steps (1 skipped, 1 failed)
@@ -433,7 +440,7 @@ Feature: Different result types
       class FeatureContext extends BehatContext
       {
           /** @Given /^customer bought coffee$/ */
-          public function chosen($argument1) {
+          public function chosen($arg1) {
               // do something
           }
 
@@ -443,7 +450,7 @@ Feature: Different result types
           }
       }
       """
-    When I run "behat -f progress features/coffee.feature"
+    When I run "behat --no-ansi -f progress features/coffee.feature"
     Then it should fail
     And the output should contain:
       """
@@ -484,7 +491,7 @@ Feature: Different result types
           }
       }
       """
-    When I run "behat -f progress features/coffee.feature"
+    When I run "behat --no-ansi -f progress features/coffee.feature"
     Then it should fail
     And the output should contain:
       """
@@ -495,6 +502,7 @@ Feature: Different result types
       01. User Error: some error in features/bootstrap/FeatureContext.php line 12
           In step `Given customer bought coffee'. # FeatureContext::chosen()
           From scenario `Redundant menu'.         # features/coffee.feature:6
+          Of feature `Redundant actions'.         # features/coffee.feature
 
       1 scenario (1 failed)
       2 steps (1 skipped, 1 failed)

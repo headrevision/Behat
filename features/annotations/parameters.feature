@@ -90,7 +90,7 @@ Feature: Parameters
       """
 
   Scenario:
-    When I run "behat"
+    When I run "behat --no-ansi"
     Then it should pass with:
       """
       ...............
@@ -99,12 +99,13 @@ Feature: Parameters
       15 steps (15 passed)
       """
 
+  @unix
   Scenario:
     Given "BEHAT_PARAMS" environment variable is set to:
       """
       formatter[name]=pretty&formatter[parameters][paths]=false&formatter[parameters][time]=false
       """
-    When I run "behat -c unexistent"
+    When I run "behat --no-ansi -c unexistent"
     Then it should pass with:
       """
       Feature: Math
@@ -128,12 +129,13 @@ Feature: Parameters
       15 steps (15 passed)
       """
 
+  @unix
   Scenario:
     Given "BEHAT_PARAMS" environment variable is set to:
       """
       formatter[name]=pretty&formatter[parameters][time]=false
       """
-    When I run "behat -c unexistent"
+    When I run "behat --no-ansi -c unexistent"
     Then it should pass with:
       """
       Feature: Math
